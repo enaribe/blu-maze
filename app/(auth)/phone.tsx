@@ -1,9 +1,8 @@
-import { View, Text, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
-import { useState } from 'react';
 import { useRouter } from 'expo-router';
+import { useState } from 'react';
+import { Image, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Button } from '../../components/ui';
 import { Colors } from '../../constants/Colors';
-import { Typography } from '../../constants/Typography';
-import { Button, Input } from '../../components/ui';
 
 /**
  * Phone Number Input Screen
@@ -32,19 +31,36 @@ export default function PhoneScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.container}
     >
+      <View style={styles.header}>
+        <Image
+          source={require('../../assets/images/logoheader.png')}
+          style={styles.headerLogo}
+          resizeMode="contain"
+        />
+      </View>
+
       <View style={styles.content}>
         <Text style={styles.title}>What's your phone number?</Text>
         <Text style={styles.subtitle}>We'll send you a verification code</Text>
 
-        <View style={styles.inputContainer}>
-          <Input
-            label="Phone Number"
-            placeholder="+220 XXX XXXX"
-            value={phoneNumber}
-            onChangeText={setPhoneNumber}
-            keyboardType="phone-pad"
-            autoFocus
-          />
+        <View style={styles.inputRow}>
+          {/* Flag Selector Placeholder */}
+          <TouchableOpacity style={styles.flagContainer}>
+            <Text style={styles.flagText}>🇬🇲</Text>
+            <Text style={styles.chevron}>⌄</Text>
+          </TouchableOpacity>
+
+          <View style={styles.phoneInputContainer}>
+            <TextInput
+              style={styles.phoneInput}
+              placeholder="| 700 0000"
+              placeholderTextColor="#666"
+              keyboardType="phone-pad"
+              value={phoneNumber}
+              onChangeText={setPhoneNumber}
+              autoFocus
+            />
+          </View>
         </View>
 
         <Text style={styles.terms}>
@@ -60,6 +76,7 @@ export default function PhoneScreen() {
           onPress={handleNext}
           loading={loading}
           disabled={phoneNumber.length < 7}
+          style={styles.nextButton}
         />
       </View>
     </KeyboardAvoidingView>
@@ -73,28 +90,78 @@ const styles = StyleSheet.create({
     padding: 24,
     justifyContent: 'space-between',
   },
+  header: {
+    paddingTop: 60,
+    alignItems: 'center',
+    marginBottom: 40,
+    height: 100,
+    justifyContent: 'center',
+  },
+  headerLogo: {
+    width: 150,
+    height: 60,
+  },
   content: {
     flex: 1,
-    paddingTop: 60,
   },
   title: {
-    ...Typography.h1,
+    fontSize: 24,
+    fontWeight: 'bold',
     color: Colors.text,
     marginBottom: 8,
   },
   subtitle: {
-    ...Typography.body,
+    fontSize: 16,
     color: Colors.textSecondary,
-    marginBottom: 40,
+    marginBottom: 32,
   },
-  inputContainer: {
+  inputRow: {
+    flexDirection: 'row',
     marginBottom: 24,
+    gap: 10,
+  },
+  flagContainer: {
+    width: 80,
+    height: 56,
+    backgroundColor: Colors.input, // Match input bg
+    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+    borderWidth: 1,
+    borderColor: '#333',
+  },
+  flagText: {
+    fontSize: 24,
+  },
+  chevron: {
+    color: Colors.text,
+    fontSize: 16,
+    marginBottom: 5,
+  },
+  phoneInputContainer: {
+    flex: 1,
+    height: 56,
+    backgroundColor: Colors.input,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#333', // Slightly lighter border if needed or transparent
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+  },
+  phoneInput: {
+    color: Colors.text,
+    fontSize: 18,
+    height: '100%',
   },
   terms: {
-    ...Typography.small,
+    fontSize: 12,
     color: Colors.textSecondary,
-    textAlign: 'center',
+    textAlign: 'left', // Design has left align? or center? Image 1 looks left aligned below input? No it is centered in the first design but left aligned here maybe?
+    // Looking at image 1: "By continuing..." is below input, small text. It looks left aligned.
     lineHeight: 18,
+    marginTop: 10,
   },
   link: {
     color: Colors.primary,
@@ -103,4 +170,8 @@ const styles = StyleSheet.create({
   buttonContainer: {
     marginBottom: 40,
   },
+  nextButton: {
+    backgroundColor: Colors.primary, // Teal
+    borderRadius: 27.5,
+  }
 });

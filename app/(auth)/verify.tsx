@@ -1,20 +1,17 @@
-import { View, Text, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
-import { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
+import { useEffect, useRef, useState } from 'react';
+import { Image, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Button } from '../../components/ui';
 import { Colors } from '../../constants/Colors';
-import { Typography } from '../../constants/Typography';
-import { Button, Input } from '../../components/ui';
-
-/**
- * OTP Verification Screen
- * User enters 6-digit code received via SMS
- */
 
 export default function VerifyScreen() {
   const router = useRouter();
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
-  const [timer, setTimer] = useState(60);
+  const [timer, setTimer] = useState(30);
+
+  // Ref to the actual text input
+  const inputRef = useRef<TextInput>(null);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -25,7 +22,6 @@ export default function VerifyScreen() {
   }, []);
 
   const handleVerify = async () => {
-    // TODO: Integrate Firebase Phone Auth verification
     if (code.length === 6) {
       setLoading(true);
       // Simulate API call
@@ -36,49 +32,73 @@ export default function VerifyScreen() {
     }
   };
 
-  const handleResend = () => {
-    setTimer(60);
-    // TODO: Resend OTP
-  };
+  const codeDigits = Array(6).fill(0).map((_, i) => code[i] || '');
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       style={styles.container}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0} // You can adjust this if needed
     >
+      <View style={styles.header}>
+        <Image
+          source={require('../../assets/images/logoheader.png')}
+          style={styles.headerLogo}
+          resizeMode="contain"
+        />
+      </View>
+
       <View style={styles.content}>
         <Text style={styles.title}>Enter verification code</Text>
         <Text style={styles.subtitle}>
-          We sent a code to +220 XXX XXXX
+          We sent a verification code to +221 774007715
         </Text>
 
-        <View style={styles.inputContainer}>
-          <Input
-            placeholder="000000"
-            value={code}
-            onChangeText={setCode}
-            keyboardType="number-pad"
-            maxLength={6}
-            autoFocus
-            style={{ textAlign: 'center', fontSize: 24, letterSpacing: 8 }}
-          />
-        </View>
+        {/* Hidden Input for Keyboard Handling */}
+        <TextInput
+          ref={inputRef}
+          value={code}
+          onChangeText={(text) => {
+            if (text.length <= 6) setCode(text);
+          }}
+          keyboardType="number-pad"
+          style={styles.hiddenInput}
+          autoFocus
+          maxLength={6}
+        />
 
-        {timer > 0 ? (
-          <Text style={styles.timer}>Resend code in {timer}s</Text>
-        ) : (
-          <Text style={styles.resend} onPress={handleResend}>
-            Resend code
-          </Text>
-        )}
+        {/* Visible Code Display */}
+        <TouchableOpacity
+          style={styles.codeContainer}
+          activeOpacity={1}
+          onPress={() => inputRef.current?.focus()}
+        >
+          {codeDigits.map((digit, index) => (
+            <View key={index} style={styles.digitContainer}>
+              <Text style={styles.digit}>{digit}</Text>
+              <View style={[
+                styles.underline,
+                // Highlight underline if this is the next digit to enter or active
+                index === code.length ? styles.activeUnderline : null,
+                // Or if filled
+                digit ? styles.filledUnderline : null
+              ]} />
+            </View>
+          ))}
+        </TouchableOpacity>
+
+        <Text style={styles.timerText}>
+          Code expires in: <Text style={styles.timerBold}>00:{timer.toString().padStart(2, '0')}</Text>
+        </Text>
       </View>
 
       <View style={styles.buttonContainer}>
         <Button
-          title="Verify"
+          title="Next"
           onPress={handleVerify}
           loading={loading}
           disabled={code.length !== 6}
+          style={styles.nextButton}
         />
       </View>
     </KeyboardAvoidingView>
@@ -92,35 +112,90 @@ const styles = StyleSheet.create({
     padding: 24,
     justifyContent: 'space-between',
   },
+  header: {
+    paddingTop: 60,
+    alignItems: 'center',
+    marginBottom: 40,
+    height: 100,
+    justifyContent: 'center',
+  },
+  headerLogo: {
+    width: 150,
+    height: 60,
+  },
   content: {
     flex: 1,
-    paddingTop: 60,
+    alignItems: 'center', // Center title and subtitle too? 
+    // Wait, design 2 title/subtitle are left-aligned in my previous implementation.
+    // User said "code n'est pas centre".
   },
   title: {
-    ...Typography.h1,
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: Colors.text,
+    marginBottom: 8,
+    textAlign: 'center', // Centering title/subtitle as well might look better if code is centered
+    width: '100%',
+  },
+  subtitle: {
+    fontSize: 16,
+    color: Colors.textSecondary,
+    marginBottom: 40,
+    lineHeight: 24,
+    textAlign: 'center',
+    width: '100%',
+  },
+  hiddenInput: {
+    position: 'absolute',
+    width: 1,
+    height: 1,
+    opacity: 0,
+  },
+  codeContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginBottom: 40,
+    width: '100%',
+    gap: 12,
+  },
+  digitContainer: {
+    width: 40,
+    height: 60,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  digit: {
+    fontSize: 32,
+    fontWeight: '600',
     color: Colors.text,
     marginBottom: 8,
   },
-  subtitle: {
-    ...Typography.body,
-    color: Colors.textSecondary,
-    marginBottom: 40,
+  underline: {
+    width: '100%',
+    height: 2,
+    backgroundColor: '#333',
   },
-  inputContainer: {
-    marginBottom: 24,
+  activeUnderline: {
+    backgroundColor: Colors.primary,
   },
-  timer: {
-    ...Typography.caption,
+  filledUnderline: {
+    backgroundColor: Colors.primary,
+  },
+  timerText: {
+    fontSize: 14,
     color: Colors.textSecondary,
     textAlign: 'center',
   },
-  resend: {
-    ...Typography.caption,
-    color: Colors.primary,
-    textAlign: 'center',
-    textDecorationLine: 'underline',
+  timerBold: {
+    color: Colors.text,
+    fontWeight: 'bold',
   },
   buttonContainer: {
-    marginBottom: 40,
+    marginBottom: Platform.OS === 'ios' ? 20 : 40,
+    width: '100%',
   },
+  nextButton: {
+    backgroundColor: Colors.primary,
+    borderRadius: 27.5,
+  }
 });

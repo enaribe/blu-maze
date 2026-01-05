@@ -1,13 +1,12 @@
-import { View, Text, StyleSheet, KeyboardAvoidingView, Platform, TouchableOpacity } from 'react-native';
-import { useState } from 'react';
 import { useRouter } from 'expo-router';
-import { Colors } from '../../constants/Colors';
-import { Typography } from '../../constants/Typography';
+import { useState } from 'react';
+import { Image, KeyboardAvoidingView, Platform, StyleSheet, Text, View } from 'react-native';
 import { Button, Input } from '../../components/ui';
+import { Colors } from '../../constants/Colors';
 
 /**
  * Profile Setup Screen
- * User enters name and optionally uploads photo
+ * User enters name
  */
 
 export default function ProfileScreen() {
@@ -33,41 +32,50 @@ export default function ProfileScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.container}
     >
-      <View style={styles.content}>
-        <Text style={styles.title}>Complete your profile</Text>
-        <Text style={styles.subtitle}>Help us get to know you better</Text>
+      <View style={styles.header}>
+        <Image
+          source={require('../../assets/images/logoheader.png')}
+          style={styles.headerLogo}
+          resizeMode="contain"
+        />
+      </View>
 
-        {/* Profile Photo Placeholder */}
-        <TouchableOpacity style={styles.photoContainer}>
-          <View style={styles.photoPlaceholder}>
-            <Text style={styles.photoIcon}>📷</Text>
-          </View>
-          <Text style={styles.photoText}>Add Photo (Optional)</Text>
-        </TouchableOpacity>
+      <View style={styles.content}>
+        <Text style={styles.title}>Personal Information</Text>
+        <Text style={styles.subtitle}>Please enter your first and last name to access the app</Text>
 
         <View style={styles.inputsContainer}>
           <Input
-            label="First Name"
-            placeholder="Enter first name"
+            label="First name"
+            placeholder=""
             value={firstName}
             onChangeText={setFirstName}
             autoFocus
+            style={styles.inputStyle}
           />
           <Input
-            label="Last Name"
-            placeholder="Enter last name"
+            label="Last name"
+            placeholder=""
             value={lastName}
             onChangeText={setLastName}
+            style={styles.inputStyle}
           />
         </View>
+
+        <Text style={styles.terms}>
+          By continuing you are acknowledging having read and accepted our{' '}
+          <Text style={styles.link}>Terms and Conditions</Text> and{' '}
+          <Text style={styles.link}>Privacy Policy</Text>
+        </Text>
       </View>
 
       <View style={styles.buttonContainer}>
         <Button
-          title="Continue"
+          title="Next"
           onPress={handleNext}
           loading={loading}
           disabled={!firstName.trim() || !lastName.trim()}
+          style={styles.nextButton}
         />
       </View>
     </KeyboardAvoidingView>
@@ -81,47 +89,57 @@ const styles = StyleSheet.create({
     padding: 24,
     justifyContent: 'space-between',
   },
+  header: {
+    paddingTop: 60,
+    alignItems: 'center',
+    marginBottom: 40,
+    height: 100,
+    justifyContent: 'center',
+  },
+  headerLogo: {
+    width: 150,
+    height: 60,
+  },
   content: {
     flex: 1,
-    paddingTop: 40,
   },
   title: {
-    ...Typography.h1,
+    fontSize: 24,
+    fontWeight: 'bold',
     color: Colors.text,
     marginBottom: 8,
   },
   subtitle: {
-    ...Typography.body,
+    fontSize: 16,
     color: Colors.textSecondary,
     marginBottom: 32,
-  },
-  photoContainer: {
-    alignItems: 'center',
-    marginBottom: 32,
-  },
-  photoPlaceholder: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: Colors.card,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: Colors.primary,
-    borderStyle: 'dashed',
-  },
-  photoIcon: {
-    fontSize: 40,
-  },
-  photoText: {
-    ...Typography.caption,
-    color: Colors.primary,
-    marginTop: 12,
+    lineHeight: 22,
   },
   inputsContainer: {
-    gap: 8,
+    gap: 16,
+    marginBottom: 24,
+  },
+  inputStyle: {
+    backgroundColor: 'transparent',
+    borderColor: '#333',
+    borderWidth: 1,
+  },
+  terms: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+    textAlign: 'left',
+    lineHeight: 18,
+    marginTop: 20,
+  },
+  link: {
+    color: Colors.primary,
+    textDecorationLine: 'underline',
   },
   buttonContainer: {
     marginBottom: 40,
   },
+  nextButton: {
+    backgroundColor: Colors.primary,
+    borderRadius: 27.5,
+  }
 });
