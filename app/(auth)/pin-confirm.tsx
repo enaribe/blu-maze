@@ -1,8 +1,9 @@
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { useState } from 'react';
 import { useRouter } from 'expo-router';
+import { useState } from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Colors } from '../../constants/Colors';
 import { Typography } from '../../constants/Typography';
+import { useStore } from '../../lib/store';
 
 /**
  * PIN Confirmation Screen
@@ -18,11 +19,20 @@ export default function PinConfirmScreen() {
       const newPin = pin + num;
       setPin(newPin);
       if (newPin.length === 4) {
-        // TODO: Validate PIN matches and save to secure storage
-        // For now, auto-navigate to main app
+        // Save user and auth state
+        const { setUser, completeOnboarding } = useStore.getState();
+        setUser({
+          id: '1',
+          firstName: 'Paul',
+          lastName: 'Izilein',
+          phoneNumber: '+220 771 1810',
+          pin: newPin,
+        });
+        completeOnboarding();
+
+        // Navigate to (main) after auth is complete
         setTimeout(() => {
-          // TODO: Navigate to (tabs) after auth is complete
-          router.replace('/(tabs)');
+          router.replace('/(main)');
         }, 200);
       }
     }

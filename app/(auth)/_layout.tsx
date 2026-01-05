@@ -22,6 +22,7 @@ export default function AuthLayout() {
       <Stack.Screen name="profile" />
       <Stack.Screen name="pin" />
       <Stack.Screen name="pin-confirm" />
+      <Stack.Screen name="unlock" />
     </Stack>
   );
 }

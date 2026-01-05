@@ -1,6 +1,6 @@
-import { useEffect } from 'react';
 import { useRouter } from 'expo-router';
-import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import { useEffect } from 'react';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { Colors } from '../constants/Colors';
 import { useStore } from '../lib/store';
 
@@ -11,20 +11,26 @@ import { useStore } from '../lib/store';
 
 export default function Index() {
   const router = useRouter();
-  const isAuthenticated = useStore((state) => state.isAuthenticated);
+  const { isAuthenticated, hasCompletedOnboarding } = useStore();
 
   useEffect(() => {
     // Small delay to avoid flash
     const timer = setTimeout(() => {
       if (isAuthenticated) {
-        router.replace('/(tabs)');
+        // If authenticated, go to unlock screen (requiring PIN)
+        // rather than directly to main app
+        router.replace('/(auth)/unlock');
+      } else if (!hasCompletedOnboarding) {
+        // If first time, go to onboarding
+        router.replace('/(auth)/onboarding');
       } else {
+        // If previously onboarded but not logged in, go to welcome/login
         router.replace('/(auth)/welcome');
       }
     }, 100);
 
     return () => clearTimeout(timer);
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, hasCompletedOnboarding, router]);
 
   return (
     <View style={styles.container}>

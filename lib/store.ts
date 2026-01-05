@@ -1,9 +1,6 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
-
-/**
- * Blu Maze Global State Management
- * Using Zustand for simple and performant state management
- */
+import { createJSONStorage, persist } from 'zustand/middleware';
 
 // Types
 export interface User {
@@ -38,11 +35,11 @@ export interface Ride {
   createdAt: Date;
 }
 
-// Store Interface
-interface AppState {
+export interface AppState {
   // Auth State
   user: User | null;
   isAuthenticated: boolean;
+  hasCompletedOnboarding: boolean;
 
   // Current Ride State
   currentRide: Ride | null;
@@ -55,6 +52,7 @@ interface AppState {
   // Actions
   setUser: (user: User) => void;
   logout: () => void;
+  completeOnboarding: () => void;
 
   setCurrentRide: (ride: Ride | null) => void;
 
@@ -65,58 +63,80 @@ interface AppState {
 }
 
 // Create Store
-export const useStore = create<AppState>((set) => ({
-  // Initial State
-  user: null,
-  isAuthenticated: false,
-  currentRide: null,
-  homeAddress: null,
-  officeAddress: null,
-  favoriteAddresses: [],
-
-  // Auth Actions
-  setUser: (user) =>
-    set({
-      user,
-      isAuthenticated: true,
-    }),
-
-  logout: () =>
-    set({
+export const useStore = create<AppState>()(
+  persist(
+    (set) => ({
+      // Initial State
       user: null,
       isAuthenticated: false,
+      hasCompletedOnboarding: false,
       currentRide: null,
+      homeAddress: null,
+      officeAddress: null,
+      favoriteAddresses: [],
+
+      // Auth Actions
+      setUser: (user) =>
+        set({
+          user,
+          isAuthenticated: true,
+        }),
+
+      logout: () =>
+        set({
+          user: null,
+          isAuthenticated: false,
+          currentRide: null,
+        }),
+
+      completeOnboarding: () =>
+        set({
+          hasCompletedOnboarding: true,
+        }),
+
+      // Ride Actions
+      setCurrentRide: (ride) =>
+        set({
+          currentRide: ride,
+        }),
+
+      // Address Actions
+      setHomeAddress: (address) =>
+        set({
+          homeAddress: address,
+        }),
+
+      setOfficeAddress: (address) =>
+        set({
+          officeAddress: address,
+        }),
+
+      addFavoriteAddress: (address) =>
+        set((state) => ({
+          favoriteAddresses: [...state.favoriteAddresses, address],
+        })),
+
+      removeFavoriteAddress: (label) =>
+        set((state) => ({
+          favoriteAddresses: state.favoriteAddresses.filter(
+            (addr) => addr.label !== label
+          ),
+        })),
     }),
-
-  // Ride Actions
-  setCurrentRide: (ride) =>
-    set({
-      currentRide: ride,
-    }),
-
-  // Address Actions
-  setHomeAddress: (address) =>
-    set({
-      homeAddress: address,
-    }),
-
-  setOfficeAddress: (address) =>
-    set({
-      officeAddress: address,
-    }),
-
-  addFavoriteAddress: (address) =>
-    set((state) => ({
-      favoriteAddresses: [...state.favoriteAddresses, address],
-    })),
-
-  removeFavoriteAddress: (label) =>
-    set((state) => ({
-      favoriteAddresses: state.favoriteAddresses.filter(
-        (addr) => addr.label !== label
-      ),
-    })),
-}));
+    {
+      name: 'blu-maze-storage',
+      storage: createJSONStorage(() => AsyncStorage),
+      partialize: (state) => ({
+        user: state.user,
+        isAuthenticated: state.isAuthenticated,
+        hasCompletedOnboarding: state.hasCompletedOnboarding,
+        homeAddress: state.homeAddress,
+        officeAddress: state.officeAddress,
+        favoriteAddresses: state.favoriteAddresses,
+      }),
+    }
+  )
+);
 
 // Selectors (for optimized re-renders)
 export const selectUser = (state: AppState) => state.user;

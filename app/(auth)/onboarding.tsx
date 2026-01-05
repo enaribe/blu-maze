@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import React, { useRef, useState } from 'react';
 import { Dimensions, FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Colors } from '../../constants/Colors';
+import { useStore } from '../../lib/store';
 
 const { width } = Dimensions.get('window');
 
@@ -95,14 +96,20 @@ export default function OnboardingScreen() {
         <View style={styles.buttonContainer}>
           <TouchableOpacity
             style={[styles.button, styles.loginButton]}
-            onPress={() => router.push('/(auth)/phone')}
+            onPress={() => {
+              useStore.getState().completeOnboarding();
+              router.push('/(auth)/phone');
+            }}
           >
             <Text style={styles.loginButtonText}>Login</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={[styles.button, styles.signupButton]}
-            onPress={() => router.push('/(auth)/phone')}
+            onPress={() => {
+              useStore.getState().completeOnboarding();
+              router.push('/(auth)/phone');
+            }}
           >
             <Text style={styles.signupButtonText}>Sign up</Text>
           </TouchableOpacity>
