@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "986986468078",
+    "project_id": "blu-maze",
+    "storage_bucket": "blu-maze.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:986986468078:android:68c57de4c60939ab2b59ff",
+        "android_client_info": {
+          "package_name": "com.blumaze.enatech"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDe2By_s_K6pyAH1HkrIbtpN2XqS9-IEh8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

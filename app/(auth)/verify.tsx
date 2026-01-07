@@ -1,8 +1,10 @@
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Image, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Image, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Button } from '../../components/ui';
 import { Colors } from '../../constants/Colors';
+import { usersCollection } from '../../lib/firebase';
+import { useStore } from '../../lib/store';
 
 export default function VerifyScreen() {
   const router = useRouter();
@@ -12,6 +14,10 @@ export default function VerifyScreen() {
 
   // Ref to the actual text input
   const inputRef = useRef<TextInput>(null);
+
+  const params = useLocalSearchParams();
+  const phoneNumber = params.phoneNumber as string;
+  const { confirmation, setUser, setConfirmation } = useStore();
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -23,12 +29,68 @@ export default function VerifyScreen() {
 
   const handleVerify = async () => {
     if (code.length === 6) {
+      if (!confirmation) {
+        Alert.alert('Error', 'No verification session found. Please try again.');
+        router.back();
+        return;
+      }
+
       setLoading(true);
-      // Simulate API call
-      setTimeout(() => {
+      try {
+        // Confirm the code
+        const userCredential = await confirmation.confirm(code);
+        const firebaseUser = userCredential?.user;
+
+        if (firebaseUser) {
+          // Check if user exists in Firestore
+          const userDoc = await usersCollection.doc(firebaseUser.uid).get();
+
+          if (userDoc.exists()) {
+            // Existing user - load profile
+            const userData = userDoc.data();
+            setUser({
+              id: firebaseUser.uid,
+              phoneNumber: firebaseUser.phoneNumber || phoneNumber,
+              firstName: userData?.firstName || '',
+              lastName: userData?.lastName || '',
+              email: userData?.email,
+              profilePhoto: userData?.profilePhoto,
+              pin: userData?.pin,
+            });
+
+            // If PIN exists, go to unlock, else go to pin creation (unlikely if exists)
+            if (userData?.pin) {
+              router.replace('/(auth)/unlock');
+            } else {
+              router.replace('/(auth)/pin');
+            }
+          } else {
+            // New user - go to profile setup
+            router.push({
+              pathname: '/(auth)/profile',
+              params: {
+                userId: firebaseUser.uid,
+                phoneNumber: firebaseUser.phoneNumber || phoneNumber
+              }
+            });
+          }
+
+          // Clear confirmation session
+          setConfirmation(null);
+        }
+      } catch (error: any) {
+        console.error('Error verifying code:', error);
+        let message = 'Failed to verify code. Please try again.';
+        if (error.code === 'auth/invalid-verification-code') {
+          message = 'Invalid verification code.';
+        } else if (error.code === 'auth/code-expired') {
+          message = 'Verification code has expired.';
+        }
+        Alert.alert('Error', message);
+        setCode('');
+      } finally {
         setLoading(false);
-        router.push('/(auth)/profile');
-      }, 1000);
+      }
     }
   };
 
@@ -51,7 +113,7 @@ export default function VerifyScreen() {
       <View style={styles.content}>
         <Text style={styles.title}>Enter verification code</Text>
         <Text style={styles.subtitle}>
-          We sent a verification code to +221 774007715
+          We sent a verification code to {phoneNumber}
         </Text>
 
         {/* Hidden Input for Keyboard Handling */}

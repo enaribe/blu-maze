@@ -6,31 +6,32 @@ import { Colors } from '../../constants/Colors';
 import { Typography } from '../../constants/Typography';
 import { useStore } from '../../lib/store';
 
+import { logoutUser } from '../../lib/firebase';
+
 /**
  * Unlock Screen
  * Shown when the app is reopened and a session exists
  */
 
+import * as SecureStore from 'expo-secure-store';
+
 export default function UnlockScreen() {
     const router = useRouter();
     const [pin, setPin] = useState('');
     const [error, setError] = useState('');
-    const { user } = useStore();
+    const { user, logout } = useStore();
 
-    const handleNumberPress = (num: string) => {
+    const handleNumberPress = async (num: string) => {
         if (pin.length < 4) {
             setError('');
             const newPin = pin + num;
             setPin(newPin);
 
             if (newPin.length === 4) {
-                // Validate PIN
-                // For demo purposes, we accept any 4-digit PIN or "1234" or the user's stored PIN
-                // You might want to enforce a specific PIN in a real app
-                if (user?.pin && newPin === user.pin) {
-                    router.replace('/(main)');
-                } else if (!user?.pin) {
-                    // If no PIN stored (legacy/demo), allow
+                // Get stored PIN from SecureStore
+                const storedPin = await SecureStore.getItemAsync('user_pin');
+
+                if (newPin === storedPin) {
                     router.replace('/(main)');
                 } else {
                     setError('Incorrect PIN. Please try again.');
@@ -49,9 +50,10 @@ export default function UnlockScreen() {
         Alert.alert('Forgot PIN', 'Please sign in again to reset your PIN', [
             { text: 'Cancel', style: 'cancel' },
             {
-                text: 'Sign Out', style: 'destructive', onPress: () => {
+                text: 'Sign Out', style: 'destructive', onPress: async () => {
                     // Logout logic
-                    useStore.getState().logout();
+                    await logoutUser();
+                    logout();
                     router.replace('/(auth)/welcome');
                 }
             }

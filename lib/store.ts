@@ -35,11 +35,16 @@ export interface Ride {
   createdAt: Date;
 }
 
+import { FirebaseAuthTypes } from '@react-native-firebase/auth';
+
+// ... (keep previous interfaces)
+
 export interface AppState {
   // Auth State
   user: User | null;
   isAuthenticated: boolean;
   hasCompletedOnboarding: boolean;
+  confirmation: FirebaseAuthTypes.ConfirmationResult | null;
 
   // Current Ride State
   currentRide: Ride | null;
@@ -51,6 +56,7 @@ export interface AppState {
 
   // Actions
   setUser: (user: User) => void;
+  setConfirmation: (confirmation: FirebaseAuthTypes.ConfirmationResult | null) => void;
   logout: () => void;
   completeOnboarding: () => void;
 
@@ -70,6 +76,7 @@ export const useStore = create<AppState>()(
       user: null,
       isAuthenticated: false,
       hasCompletedOnboarding: false,
+      confirmation: null,
       currentRide: null,
       homeAddress: null,
       officeAddress: null,
@@ -82,10 +89,16 @@ export const useStore = create<AppState>()(
           isAuthenticated: true,
         }),
 
+      setConfirmation: (confirmation) =>
+        set({
+          confirmation,
+        }),
+
       logout: () =>
         set({
           user: null,
           isAuthenticated: false,
+          confirmation: null,
           currentRide: null,
         }),
 

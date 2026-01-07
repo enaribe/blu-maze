@@ -1,8 +1,10 @@
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Image, KeyboardAvoidingView, Platform, StyleSheet, Text, View } from 'react-native';
+import { Alert, Image, KeyboardAvoidingView, Platform, StyleSheet, Text, View } from 'react-native';
 import { Button, Input } from '../../components/ui';
 import { Colors } from '../../constants/Colors';
+import { firestore, usersCollection } from '../../lib/firebase';
+import { useStore } from '../../lib/store';
 
 /**
  * Profile Setup Screen
@@ -15,15 +17,47 @@ export default function ProfileScreen() {
   const [lastName, setLastName] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const params = useLocalSearchParams();
+  const userId = params.userId as string;
+  const phoneNumber = params.phoneNumber as string;
+  const { setUser } = useStore();
+
   const handleNext = async () => {
-    // TODO: Save user profile to Firebase
     if (firstName.trim() && lastName.trim()) {
       setLoading(true);
-      // Simulate API call
-      setTimeout(() => {
-        setLoading(false);
+      try {
+        // Generate a random referral code
+        const referralCode = `${firstName.substring(0, 3).toUpperCase()}${Math.floor(100 + Math.random() * 900)}`;
+
+        // Save user to Firestore
+        await usersCollection.doc(userId).set({
+          userId,
+          phoneNumber,
+          firstName: firstName.trim(),
+          lastName: lastName.trim(),
+          referralCode,
+          points: 0,
+          hasCompletedOnboarding: true,
+          createdAt: firestore.FieldValue.serverTimestamp(),
+          updatedAt: firestore.FieldValue.serverTimestamp(),
+        });
+
+        // Update local store
+        setUser({
+          id: userId,
+          phoneNumber,
+          firstName: firstName.trim(),
+          lastName: lastName.trim(),
+        });
+
+        // Navigate to PIN creation
         router.push('/(auth)/pin');
-      }, 1000);
+      } catch (error) {
+        console.error('Error saving profile:', error);
+        Alert.alert('Error', 'Failed to save profile. Please try again.');
+      } finally {
+        setLoading(false);
+      }
     }
   };
 

@@ -10,30 +10,68 @@ import { useStore } from '../../lib/store';
  * User re-enters PIN to confirm
  */
 
+import * as Crypto from 'expo-crypto';
+import { useLocalSearchParams } from 'expo-router';
+import * as SecureStore from 'expo-secure-store';
+import { Alert } from 'react-native';
+import { firestore, usersCollection } from '../../lib/firebase';
+
 export default function PinConfirmScreen() {
   const router = useRouter();
   const [pin, setPin] = useState('');
+  const params = useLocalSearchParams();
+  const originalPin = params.originalPin as string;
 
-  const handleNumberPress = (num: string) => {
+  const handleNumberPress = async (num: string) => {
     if (pin.length < 4) {
       const newPin = pin + num;
       setPin(newPin);
-      if (newPin.length === 4) {
-        // Save user and auth state
-        const { setUser, completeOnboarding } = useStore.getState();
-        setUser({
-          id: '1',
-          firstName: 'Paul',
-          lastName: 'Izilein',
-          phoneNumber: '+220 771 1810',
-          pin: newPin,
-        });
-        completeOnboarding();
 
-        // Navigate to (main) after auth is complete
-        setTimeout(() => {
-          router.replace('/(main)');
-        }, 200);
+      if (newPin.length === 4) {
+        if (newPin !== originalPin) {
+          Alert.alert('Error', 'PINs do not match. Please try again.');
+          setPin('');
+          router.back();
+          return;
+        }
+
+        try {
+          const { user, setUser, completeOnboarding } = useStore.getState();
+
+          if (!user?.id) {
+            Alert.alert('Error', 'Session lost. Please log in again.');
+            router.replace('/(auth)/welcome');
+            return;
+          }
+
+          // Hash PIN for Firestore
+          const hashedPin = await Crypto.digestStringAsync(
+            Crypto.CryptoDigestAlgorithm.SHA256,
+            newPin
+          );
+
+          // Update Firestore
+          await usersCollection.doc(user.id).update({
+            pin: hashedPin,
+            updatedAt: firestore.FieldValue.serverTimestamp(),
+          });
+
+          // Save PIN locally for quick unlock
+          await SecureStore.setItemAsync('user_pin', newPin);
+
+          // Update local store with hashed PIN if needed (or just keep as is)
+          setUser({ ...user, pin: hashedPin });
+          completeOnboarding();
+
+          // Navigate to (main) after auth is complete
+          setTimeout(() => {
+            router.replace('/(main)');
+          }, 200);
+        } catch (error) {
+          console.error('Error saving PIN:', error);
+          Alert.alert('Error', 'Failed to save PIN. Please try again.');
+          setPin('');
+        }
       }
     }
   };

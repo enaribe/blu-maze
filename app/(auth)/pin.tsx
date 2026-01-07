@@ -1,6 +1,6 @@
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { useState } from 'react';
 import { useRouter } from 'expo-router';
+import { useState } from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Colors } from '../../constants/Colors';
 import { Typography } from '../../constants/Typography';
 
@@ -18,9 +18,12 @@ export default function PinScreen() {
       const newPin = pin + num;
       setPin(newPin);
       if (newPin.length === 4) {
-        // Auto-navigate to confirm screen
+        // Auto-navigate to confirm screen with the original pin
         setTimeout(() => {
-          router.push('/(auth)/pin-confirm');
+          router.push({
+            pathname: '/(auth)/pin-confirm',
+            params: { originalPin: newPin }
+          });
         }, 200);
       }
     }

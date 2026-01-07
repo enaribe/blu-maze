@@ -4,6 +4,8 @@ import { SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } fr
 import { Colors } from '../../constants/Colors';
 import { useStore } from '../../lib/store';
 
+import { logoutUser } from '../../lib/firebase';
+
 /**
  * Burger Menu Screen
  * Sliding menu with user profile and app navigation
@@ -13,7 +15,8 @@ export default function MenuScreen() {
     const router = useRouter();
     const { user, logout } = useStore();
 
-    const handleLogout = () => {
+    const handleLogout = async () => {
+        await logoutUser();
         logout();
         router.replace('/(auth)/welcome');
     };

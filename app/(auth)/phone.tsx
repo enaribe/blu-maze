@@ -1,8 +1,10 @@
+import auth from '@react-native-firebase/auth';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Image, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Image, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Button } from '../../components/ui';
 import { Colors } from '../../constants/Colors';
+import { useStore } from '../../lib/store';
 
 /**
  * Phone Number Input Screen
@@ -14,15 +16,44 @@ export default function PhoneScreen() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const { setConfirmation } = useStore();
+
   const handleNext = async () => {
-    // TODO: Integrate Firebase Phone Auth
-    if (phoneNumber.length >= 7) {
-      setLoading(true);
-      // Simulate API call
-      setTimeout(() => {
-        setLoading(false);
-        router.push('/(auth)/verify');
-      }, 1000);
+    if (phoneNumber.length < 7) return;
+
+    setLoading(true);
+    try {
+      // Format phone number (must include country code +220 for Gambia)
+      const formattedNumber = phoneNumber.startsWith('+')
+        ? phoneNumber
+        : `+220${phoneNumber.replace(/^0+/, '')}`;
+
+      console.log('Sending OTP to:', formattedNumber);
+
+      // Send verification code
+      const confirmation = await auth().signInWithPhoneNumber(formattedNumber);
+
+      // Store confirmation for verify screen
+      setConfirmation(confirmation);
+
+      // Navigate to verify screen
+      router.push({
+        pathname: '/(auth)/verify',
+        params: { phoneNumber: formattedNumber }
+      });
+    } catch (error: any) {
+      console.error('Error sending OTP:', error);
+      let message = 'Failed to send verification code. Please try again.';
+
+      if (error.code === 'auth/invalid-phone-number') {
+        message = 'Invalid phone number format.';
+      } else if (error.code === 'auth/too-many-requests') {
+        message = 'Too many requests. Please try again later.';
+      }
+
+      Alert.alert('Error', message);
+    } finally {
+      setLoading(false);
     }
   };
 
