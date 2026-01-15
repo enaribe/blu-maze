@@ -1,13 +1,82 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useState } from 'react';
+import { SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import PlacesAutocomplete from '../../components/PlacesAutocomplete';
+import { Colors } from '../../constants/Colors';
 
 /**
  * Request Trip Screen
+ * Search for destination, recent places, saved addresses
  */
+
+interface SavedAddress {
+    icon: string;
+    title: string;
+    subtitle: string;
+    coords?: { latitude: number; longitude: number };
+}
 
 export default function RequestTripScreen() {
     const router = useRouter();
+    const [pickupAddress] = useState('Kotu Layout');
+
+    // Saved addresses (will come from Firestore later)
+    const savedAddresses: SavedAddress[] = [
+        {
+            icon: 'home',
+            title: 'Home',
+            subtitle: 'Kairaba Avenue, Serrekunda, Gambia',
+            coords: { latitude: 13.4549, longitude: -16.6788 },
+        },
+        {
+            icon: 'briefcase',
+            title: 'Office',
+            subtitle: 'Westfield Junction, Banjul, Gambia',
+            coords: { latitude: 13.4544, longitude: -16.5790 },
+        },
+    ];
+
+    // Recent destinations (will come from store/Firestore later)
+    const recentDestinations: SavedAddress[] = [
+        {
+            icon: 'time',
+            title: 'Traffic Light',
+            subtitle: 'Kairaba Avenue, Serrekunda, Gambia',
+            coords: { latitude: 13.4423, longitude: -16.6790 },
+        },
+        {
+            icon: 'time',
+            title: 'Senegambia Beach',
+            subtitle: 'Kololi, Gambia',
+            coords: { latitude: 13.4652, longitude: -16.6910 },
+        },
+    ];
+
+    const handlePlaceSelected = (place: { address: string; coords: { latitude: number; longitude: number } }) => {
+        // Navigate back to home with destination data
+        router.push({
+            pathname: '/(main)',
+            params: {
+                destination: place.address,
+                destLat: place.coords.latitude.toString(),
+                destLng: place.coords.longitude.toString(),
+            },
+        });
+    };
+
+    const handleSavedAddressPress = (address: SavedAddress) => {
+        if (address.coords) {
+            router.push({
+                pathname: '/(main)',
+                params: {
+                    destination: address.title,
+                    destLat: address.coords.latitude.toString(),
+                    destLng: address.coords.longitude.toString(),
+                },
+            });
+        }
+    };
 
     return (
         <SafeAreaView style={styles.container}>
@@ -19,7 +88,12 @@ export default function RequestTripScreen() {
                 <View style={{ width: 40 }} />
             </View>
 
-            <View style={styles.content}>
+            <ScrollView 
+                style={styles.content} 
+                showsVerticalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled"
+                nestedScrollEnabled={true}
+            >
                 {/* Input Container */}
                 <View style={styles.inputsContainer}>
                     <View style={styles.iconsColumn}>
@@ -27,25 +101,28 @@ export default function RequestTripScreen() {
                             <Ionicons name="locate-outline" size={18} color="white" />
                         </View>
                         <View style={styles.verticalLine} />
-                        <View style={[styles.iconCircle, { backgroundColor: '#00BFA5' }]}>
+                        <View style={[styles.iconCircle, { backgroundColor: Colors.primary }]}>
                             <Ionicons name="location" size={18} color="white" />
                         </View>
                     </View>
 
                     <View style={styles.inputsColumn}>
+                        {/* Pickup (read-only) */}
                         <View style={styles.inputWrapper}>
                             <TextInput
                                 style={styles.input}
-                                value="Kotu Layout"
+                                value={pickupAddress}
                                 placeholderTextColor="#666"
+                                editable={false}
                             />
                         </View>
+
+                        {/* Destination (autocomplete) */}
                         <View style={styles.inputWrapper}>
-                            <TextInput
-                                style={styles.input}
+                            <PlacesAutocomplete
                                 placeholder="Enter destination"
-                                placeholderTextColor="#666"
-                                autoFocus
+                                onPlaceSelected={handlePlaceSelected}
+                                icon="search"
                             />
                         </View>
                     </View>
@@ -54,48 +131,52 @@ export default function RequestTripScreen() {
                 {/* My Addresses */}
                 <Text style={styles.sectionTitle}>My addresses</Text>
                 <View style={styles.listContainer}>
-                    <ListItem
-                        icon="home"
-                        title="Home"
-                        subtitle="Kairaba Avenue, Serrekunda, Gambia"
-                        onPress={() => router.push('/(main)/?step=preview')} // deep link to preview step
-                    />
-                    <View style={styles.divider} />
-                    <ListItem
-                        icon="briefcase"
-                        title="Office"
-                        subtitle="Kairaba Avenue, Serrekunda, Gambia"
-                        onPress={() => router.push('/(main)/?step=preview')}
-                    />
+                    {savedAddresses.map((address, index) => (
+                        <View key={index}>
+                            {index > 0 && <View style={styles.divider} />}
+                            <ListItem
+                                icon={address.icon}
+                                title={address.title}
+                                subtitle={address.subtitle}
+                                onPress={() => handleSavedAddressPress(address)}
+                            />
+                        </View>
+                    ))}
                 </View>
 
                 {/* Recent */}
                 <Text style={styles.sectionTitle}>Recent</Text>
                 <View style={styles.listContainer}>
-                    <ListItem
-                        icon="time"
-                        title="Traffic Light"
-                        subtitle="Kairaba Avenue, Serrekunda, Gambia"
-                        onPress={() => router.push('/(main)/?step=preview')}
-                    />
+                    {recentDestinations.map((destination, index) => (
+                        <View key={index}>
+                            {index > 0 && <View style={styles.divider} />}
+                            <ListItem
+                                icon={destination.icon}
+                                title={destination.title}
+                                subtitle={destination.subtitle}
+                                onPress={() => handleSavedAddressPress(destination)}
+                            />
+                        </View>
+                    ))}
                 </View>
-            </View>
+            </ScrollView>
         </SafeAreaView>
     );
 }
 
-function ListItem({ icon, title, subtitle, onPress }: { icon: any; title: string; subtitle: string; onPress: () => void }) {
+function ListItem({ icon, title, subtitle, onPress }: { icon: string; title: string; subtitle: string; onPress: () => void }) {
     return (
         <TouchableOpacity style={styles.listItem} onPress={onPress}>
             <View style={styles.listIconCircle}>
-                <Ionicons name={icon} size={20} color="white" />
+                <Ionicons name={icon as any} size={20} color="white" />
             </View>
             <View style={{ flex: 1 }}>
                 <Text style={styles.listTitle}>{title}</Text>
-                <Text style={styles.listSubtitle}>{subtitle}</Text>
+                <Text style={styles.listSubtitle} numberOfLines={1}>{subtitle}</Text>
             </View>
+            <Ionicons name="chevron-forward" size={20} color="#666" />
         </TouchableOpacity>
-    )
+    );
 }
 
 const styles = StyleSheet.create({
@@ -159,7 +240,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
     },
     inputWrapper: {
-        height: 40,
+        minHeight: 40,
         justifyContent: 'center',
     },
     input: {

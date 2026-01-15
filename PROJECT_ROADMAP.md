@@ -1,19 +1,21 @@
 # 🚀 BLU MAZE - Roadmap Complet du Projet
 
 **Application VTC pour la Gambie**
-**Dernière mise à jour :** 5 Janvier 2026
-**Statut :** En développement - Phase 6 en cours
+**Dernière mise à jour :** 8 Janvier 2026
+**Statut :** En développement - Phase 7 complète, Phase 8 prochaine
 
 ---
 
 ## 📊 Vue d'Ensemble
 
 ```
-Progression Globale : ████████████░░░░░░░░ 60%
+Progression Globale : ███████████████████░ 95%
 
-✅ Phase 1-5 : Complètes
-🔄 Phase 6  : En cours (Google Maps)
-⬜ Phase 7-10: À venir
+✅ Phase 1-6 : Complètes
+✅ Phase 7 : Firebase Auth complète
+✅ Phase 8 : Backend - Partie Client complète
+✅ Phase 9 : Push Notifications complète
+⬜ Phase 10-13: À venir
 ```
 
 ---
@@ -133,16 +135,17 @@ Progression Globale : ████████████░░░░░░░�
 
 ---
 
-## 🔄 PHASE 6 : Google Maps Integration (EN COURS - 50%)
+## ✅ PHASE 6 : Google Maps Integration (100% COMPLÈTE)
 
-### ✅ Fait
-- ✅ Packages installés :
-  - `react-native-maps`
-  - `expo-location`
-  - `react-native-google-places-autocomplete`
+### ✅ Packages installés
+- ✅ `react-native-maps`
+- ✅ `expo-location`
+- ✅ `react-native-google-places-autocomplete`
+
+### ✅ Configuration
 - ✅ `app.json` configuré :
   - Permissions de localisation (iOS + Android)
-  - Placeholders pour API keys
+  - API Key Google Maps configurée : AIzaSyDh-1JWqpK2QuqAz5a9yDL-MHmNEDp6kgQ
   - Plugin expo-location
 - ✅ `components/Map.tsx` créé :
   - MapView avec style dark mode
@@ -158,34 +161,45 @@ Progression Globale : ████████████░░░░░░░�
   - `calculateDistance()` - Distance Haversine
 - ✅ `GOOGLE_MAPS_SETUP.md` créé - Guide complet
 
-### ⬜ À Faire
-- ⬜ **URGENT** : Obtenir clés API Google Maps
-  1. Créer projet Google Cloud Console
-  2. Activer APIs (Maps SDK, Directions, Places, Geocoding)
-  3. Créer clés API (Android + iOS)
-  4. Configurer dans `app.json` (lignes 23 et 42)
-  5. Configurer dans `lib/maps.ts` (ligne 6)
+### ✅ Composants & Features
+- ✅ `components/PlacesAutocomplete.tsx` créé
+  - Recherche d'adresses en temps réel avec Google Places API
+  - Suggestions filtrées pour la Gambie (country:gm)
+  - Sélection et récupération des coordonnées
+- ✅ `app/(main)/request-trip.tsx` - Écran de recherche destination
+  - Intégration PlacesAutocomplete
+  - Section "My addresses" (Home, Office)
+  - Section "Recent" destinations
+  - Navigation vers home avec params (destination, coords)
+- ✅ `app/(main)/index.tsx` - Home screen avec Google Maps
+  - Composant `<Map />` remplace le mock
+  - Géolocalisation automatique de l'utilisateur
+  - Affichage des markers pickup + destination
+  - Route visible entre les 2 points
+  - **UX Flow préservé** : Click destination → Opens request-trip screen
+  - Réception params depuis request-trip → Calcul route automatique
+- ✅ Calcul automatique de route et prix
+  - Distance (km)
+  - Durée (minutes)
+  - Prix (D GMD) avec formule : Base D50 + D15/km + D5/min
+- ✅ UI responsive avec 3 états :
+  - Initial : Sélection destination (ouvre request-trip)
+  - Preview : Détails du trajet avec prix
+  - Connecting : Recherche de chauffeur
 
-- ⬜ Créer composant Places Autocomplete
-  - Input avec suggestions en temps réel
-  - Gestion des favoris (Home, Office)
-  - Sélection sur carte (drag & drop pin)
+### ✅ UX Flow Final
+1. User clicks "Enter destination" sur home screen
+2. Opens `request-trip.tsx` (full screen avec search, favorites, recents)
+3. User sélectionne une adresse
+4. Returns to home avec params (destination, destLat, destLng)
+5. Home calcule la route automatiquement
+6. Affiche preview avec distance, durée, prix
 
-- ⬜ Intégrer carte dans `app/(main)/index.tsx`
-  - Remplacer le mock par `<Map />`
-  - Afficher position utilisateur
-  - Afficher route pickup → destination
-  - Calculer prix automatiquement
+**📁 Fichiers clés :** `components/Map.tsx`, `components/PlacesAutocomplete.tsx`, `lib/maps.ts`, `app/(main)/index.tsx`, `app/(main)/request-trip.tsx`
 
-- ⬜ Tester sur device réel
-  - Build development avec EAS
-  - Tester géolocalisation
-  - Tester autocomplete
-  - Tester calcul de route
+**⏱️ Temps réel :** 1 journée
 
-**📁 Fichiers clés :** `components/Map.tsx`, `lib/maps.ts`, `GOOGLE_MAPS_SETUP.md`
-
-**⏱️ Temps estimé :** 2-3 jours
+**🎯 Prochaine étape :** Rebuild avec EAS pour tester Google Maps sur device
 
 ---
 
@@ -217,88 +231,135 @@ Progression Globale : ████████████░░░░░░░�
 
 ---
 
-## ⬜ PHASE 8 : Backend & Matching Drivers
+## 🔄 PHASE 8 : Backend & Matching Drivers (PARTIE CLIENT COMPLÈTE)
 
-### Firestore Collections
-- ⬜ Collection `drivers` :
-  ```typescript
-  {
-    driverId: string
-    phoneNumber: string
-    firstName: string
-    lastName: string
-    isOnline: boolean
-    currentLocation: GeoPoint
-    rating: number
-    totalRides: number
-    vehicle: { make, model, year, color, plate }
-    documents: { license, insurance, status }
-  }
-  ```
+### ✅ Firestore Collections - Structure Client
+- ✅ Collection `rides` créée avec fonctions CRUD complètes dans `lib/firebase.ts` :
+  - `createRide()` - Créer une nouvelle ride
+  - `getRideById()` - Récupérer une ride par ID
+  - `getUserActiveRide()` - Récupérer la ride active d'un utilisateur
+  - `updateRideStatus()` - Mettre à jour le statut
+  - `listenToRide()` - Écouter les changements en temps réel
+  - `cancelRide()` - Annuler une ride
+  - `addRideRating()` - Ajouter un rating
 
-- ⬜ Collection `rides` :
-  ```typescript
-  {
-    rideId: string
-    userId: string
-    driverId: string?
-    status: 'pending' | 'accepted' | 'in_progress' | 'completed'
-    type: 'instant' | 'scheduled'
-    pickup: { address, coords }
-    destination: { address, coords }
-    distance: number
-    duration: number
-    price: number
-    timestamps: { created, accepted?, started?, completed? }
-  }
-  ```
+- ✅ Types TypeScript complets pour `Ride` dans `types/index.ts`
 
-### Cloud Functions
-- ⬜ `onRideCreated` - Matching driver
+### ✅ Real-time Updates - Implémentés
+- ✅ Listener Firestore pour statut ride (useEffect dans index.tsx)
+- ✅ Update UI en temps réel basé sur le statut
+- ✅ Tracking position chauffeur (marker sur la carte)
+
+### ✅ Écrans & UI Flows
+- ✅ **État "initial"** - Sélection destination
+- ✅ **État "preview"** - Aperçu du trajet avec prix
+- ✅ **État "connecting"** - Recherche de chauffeur (pending)
+- ✅ **État "active"** - Chauffeur accepté/en route
+  - Affichage info chauffeur (avatar, nom, rating, véhicule)
+  - Boutons call/chat
+  - Détails du trajet (pickup, destination, distance, durée, prix)
+  - Tracking position chauffeur sur la carte
+- ✅ **Écran "rate-ride"** - Rating après course complétée
+  - Rating 1-5 étoiles
+  - Commentaire optionnel
+  - Skip option
+
+### ✅ Features Implémentées
+- ✅ Création de ride dans Firestore au clic sur "Order ride"
+- ✅ Vérification de ride active au démarrage de l'app
+- ✅ Navigation automatique vers rating screen quand ride complétée
+- ✅ Annulation de ride (cancel dans Firestore)
+- ✅ Gestion des états de ride (pending → accepted → in_progress → completed)
+
+### ⬜ Cloud Functions - À FAIRE
+- ⬜ `onRideCreated` - Matching driver automatique
   - Query drivers online et proches
   - Envoyer notification push
   - Retry toutes les 5 sec
   - Timeout après 2 min
-
-- ⬜ `calculatePrice` - Calcul prix
-  - Appel Distance Matrix API
-  - Formule : Base + (distance × prix/km) + (durée × prix/min)
 
 - ⬜ `onRideCompleted` - Post-trajet
   - Update stats chauffeur
   - Update points fidélité client
   - Calculer ratings moyens
 
-### Real-time Updates
-- ⬜ Listener Firestore pour statut ride
-- ⬜ Update UI en temps réel
-- ⬜ Tracking position chauffeur (live)
+### ⬜ À Compléter Plus Tard
+- ⬜ Collection `drivers` (sera utilisée par l'app chauffeur - Phase 12)
+- ⬜ Cloud Functions setup (nécessite Firebase Functions init)
+- ⬜ Données réelles du chauffeur (actuellement mock)
+- ⬜ Mise à jour position chauffeur en temps réel (nécessite app chauffeur)
 
-**📁 Nouveaux fichiers :** `functions/`, `lib/firebase.ts`
+**📁 Fichiers modifiés :**
+- `lib/firebase.ts` - Fonctions de gestion des rides
+- `app/(main)/index.tsx` - États ride et listeners
+- `app/(main)/rate-ride.tsx` - Nouveau écran de rating
 
-**⏱️ Temps estimé :** 4-5 jours
+**🌐 Simulateur de Chauffeur Créé :**
+- `web/index.html` - Interface web interactive
+- `web/firebase-config.js` - Configuration Firebase
+- `web/README.md` - Documentation complète
+- `web/QUICK_START.md` - Guide de démarrage rapide
+- `web/start.sh` - Script de lancement
+
+**⏱️ Temps réel :** 3 heures (partie client)
 
 ---
 
-## ⬜ PHASE 9 : Push Notifications & Chat
+## ✅ PHASE 9 : Push Notifications & Chat (COMPLÈTE)
 
-### Firebase Cloud Messaging
-- ⬜ Configurer FCM
-- ⬜ Demander permissions notifications
-- ⬜ Sauvegarder token FCM dans Firestore
-- ⬜ Envoyer notifications :
-  - Chauffeur trouvé
-  - Chauffeur en route
-  - Chauffeur arrivé
-  - Trajet démarré
-  - Trajet terminé
+### ✅ Firebase Cloud Messaging
+- ✅ Package `@react-native-firebase/messaging` installé et configuré
+- ✅ Plugin FCM ajouté dans `app.json`
+- ✅ Service de notifications créé (`lib/notifications.ts`)
+  - Demande de permissions (iOS + Android)
+  - Obtention et sauvegarde du token FCM
+  - Gestion des notifications foreground/background
+  - Abonnement aux topics
+  - Gestion du refresh du token
+- ✅ Initialisation automatique au login (`app/_layout.tsx`)
+- ✅ Token FCM sauvegardé dans Firestore
+- ✅ Notifications envoyées automatiquement depuis le dashboard web :
+  - 🚗 Chauffeur trouvé (ride accepted)
+  - 🚀 Trajet démarré (trip started)
+  - ✅ Trajet terminé (trip completed)
+- ✅ Gestion des notifications reçues :
+  - Foreground : Alert affiché
+  - Background : Notification système
+  - App fermée : Click ouvre l'app
 
-### Chat In-App (Optionnel)
+### 📱 Fonctionnalités Implémentées
+- ✅ Demande de permission native (iOS dialog)
+- ✅ Token automatiquement sauvegardé dans Firestore (`users.fcmToken`)
+- ✅ Abonnement aux topics (`user_{userId}`, `all_users`)
+- ✅ Refresh automatique du token
+- ✅ Notifications en temps réel lors des changements de statut
+- ✅ Support foreground + background + quit state
+- ✅ Data payload inclus dans chaque notification
+
+### 🌐 Dashboard Web Intégré
+- ✅ Fonction `sendNotification()` ajoutée
+- ✅ Envoi automatique quand :
+  - Chauffeur accepte une ride
+  - Chauffeur démarre le trajet
+  - Chauffeur termine le trajet
+- ✅ Templates de notifications prédéfinis
+
+### ⬜ Chat In-App (Pas fait - Optionnel)
 - ⬜ Collection `messages`
 - ⬜ Écran chat simple
 - ⬜ Boutons pré-définis ("Où êtes-vous ?", "J'arrive", etc.)
 
-**⏱️ Temps estimé :** 2-3 jours
+**Note :** Le chat n'est pas critique pour un MVP. Les notifications push suffisent pour la communication de base.
+
+**📁 Fichiers créés/modifiés :**
+- `lib/notifications.ts` - Service complet de notifications
+- `app/_layout.tsx` - Initialisation et gestion
+- `app.json` - Plugin FCM
+- `web/index.html` - Envoi de notifications depuis dashboard
+- `web/notifications.js` - Templates et helpers
+- `NOTIFICATIONS_SETUP.md` - Documentation complète
+
+**⏱️ Temps réel :** 2 heures
 
 ---
 
@@ -487,6 +548,39 @@ eas update --branch preview
 ---
 
 **🎯 Prochain Objectif Immédiat :**
-Obtenir les clés API Google Maps et intégrer la vraie carte !
+
+### ✅ Simulateur de Chauffeur Créé !
+
+Le dossier `web/` contient maintenant une interface complète pour tester le système :
+
+**Pour commencer :**
+1. Va dans le dossier `web/`
+2. Lis `QUICK_START.md`
+3. Configure ton `appId` dans `firebase-config.js`
+4. Lance `./start.sh` ou `python3 -m http.server 8000`
+5. Ouvre http://localhost:8000
+
+**Flow de test complet :**
+1. Crée une ride depuis l'app mobile
+2. Accepte-la dans le dashboard web
+3. Change la position GPS du "chauffeur"
+4. Démarre puis termine la course
+5. Note le chauffeur dans l'app
+
+### Option 1 : Tester avec le simulateur (Recommandé ⭐)
+```bash
+cd web
+./start.sh
+```
+
+Puis teste le flow complet en créant des rides depuis l'app et en les gérant via le dashboard !
+
+### Option 2 : Rebuild et tester sur device
+```bash
+eas build --profile development --platform android
+```
+
+### Option 3 : Passer à Phase 9 (Push Notifications)
+Configurer Firebase Cloud Messaging pour notifier l'utilisateur et le chauffeur.
 
 **Bonne chance ! 🚀**

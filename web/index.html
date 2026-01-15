@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blu Maze - Driver Simulator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #0A0E12 0%, #1B262C 100%);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #00D9D5 0%, #0058D1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            color: #AAAAAA;
+            font-size: 1.1em;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 24px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .card h2 {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            color: #00D9D5;
+        }
+
+        .ride-item {
+            background: rgba(0, 88, 209, 0.1);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            border: 1px solid rgba(0, 88, 209, 0.3);
+        }
+
+        .ride-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .ride-id {
+            font-size: 0.9em;
+            color: #00D9D5;
+            font-weight: bold;
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .status-pending {
+            background: #FF9800;
+            color: #000;
+        }
+
+        .status-accepted {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .status-in_progress {
+            background: #2196F3;
+            color: white;
+        }
+
+        .ride-details {
+            font-size: 0.95em;
+            line-height: 1.6;
+            color: #CCCCCC;
+            margin-bottom: 12px;
+        }
+
+        .ride-details strong {
+            color: white;
+        }
+
+        .ride-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.95em;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .btn-accept {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn-reject {
+            background: #F44336;
+            color: white;
+        }
+
+        .btn-start {
+            background: #2196F3;
+            color: white;
+        }
+
+        .btn-complete {
+            background: #00D9D5;
+            color: #000;
+        }
+
+        .btn-update-location {
+            background: #9C27B0;
+            color: white;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #00D9D5;
+        }
+
+        .location-simulator {
+            background: rgba(0, 217, 213, 0.1);
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 16px;
+            border: 1px solid rgba(0, 217, 213, 0.3);
+        }
+
+        .location-simulator h3 {
+            font-size: 1em;
+            margin-bottom: 12px;
+            color: #00D9D5;
+        }
+
+        .location-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        input[type="number"] {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 10px;
+            color: white;
+            font-size: 0.95em;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #00D9D5;
+        }
+
+        label {
+            display: block;
+            font-size: 0.85em;
+            color: #AAAAAA;
+            margin-bottom: 4px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: rgba(0, 88, 209, 0.1);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            border: 1px solid rgba(0, 88, 209, 0.3);
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #00D9D5;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #AAAAAA;
+        }
+
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚗 Blu Maze Driver Simulator</h1>
+            <p class="subtitle">Test your ride system in real-time</p>
+        </header>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-value" id="pendingCount">0</div>
+                <div class="stat-label">Pending Rides</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="activeCount">0</div>
+                <div class="stat-label">Active Rides</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="completedCount">0</div>
+                <div class="stat-label">Completed Today</div>
+            </div>
+        </div>
+
+        <div class="grid">
+            <!-- Pending Rides -->
+            <div class="card">
+                <h2>📋 Pending Rides</h2>
+                <div id="pendingRides" class="rides-list">
+                    <div class="loading">Loading...</div>
+                </div>
+            </div>
+
+            <!-- Active Ride -->
+            <div class="card">
+                <h2>🚀 Active Ride</h2>
+                <div id="activeRide" class="rides-list">
+                    <div class="empty-state">No active ride</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Import Firebase
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, query, where, onSnapshot, doc, updateDoc, serverTimestamp, getDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        import { firebaseConfig } from './firebase-config.js';
+
+        // FCM Server Key - Get from Firebase Console → Project Settings → Cloud Messaging
+        // ⚠️ For production, move this to Cloud Functions for security
+        const FCM_SERVER_KEY = 'YOUR_SERVER_KEY_HERE';
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // State
+        let pendingRidesListener = null;
+        let activeRideListener = null;
+        let currentActiveRideId = null;
+
+        // Listen to pending rides
+        function listenToPendingRides() {
+            const ridesRef = collection(db, 'rides');
+            const q = query(ridesRef, where('status', '==', 'pending'));
+
+            pendingRidesListener = onSnapshot(q, (snapshot) => {
+                const rides = [];
+                snapshot.forEach((doc) => {
+                    rides.push({ id: doc.id, ...doc.data() });
+                });
+
+                updatePendingCount(rides.length);
+                renderPendingRides(rides);
+            });
+        }
+
+        // Listen to accepted/in_progress rides
+        function listenToActiveRides() {
+            const ridesRef = collection(db, 'rides');
+            const q = query(ridesRef, where('status', 'in', ['accepted', 'in_progress']));
+
+            activeRideListener = onSnapshot(q, (snapshot) => {
+                const rides = [];
+                snapshot.forEach((doc) => {
+                    rides.push({ id: doc.id, ...doc.data() });
+                });
+
+                updateActiveCount(rides.length);
+                if (rides.length > 0) {
+                    currentActiveRideId = rides[0].id;
+                    renderActiveRide(rides[0]);
+                } else {
+                    currentActiveRideId = null;
+                    renderActiveRide(null);
+                }
+            });
+        }
+
+        // Update stats
+        function updatePendingCount(count) {
+            document.getElementById('pendingCount').textContent = count;
+        }
+
+        function updateActiveCount(count) {
+            document.getElementById('activeCount').textContent = count;
+        }
+
+        // Render pending rides
+        function renderPendingRides(rides) {
+            const container = document.getElementById('pendingRides');
+
+            if (rides.length === 0) {
+                container.innerHTML = '<div class="empty-state">No pending rides</div>';
+                return;
+            }
+
+            container.innerHTML = rides.map(ride => `
+                <div class="ride-item">
+                    <div class="ride-header">
+                        <span class="ride-id">#${ride.id.slice(0, 8)}</span>
+                        <span class="status-badge status-${ride.status}">${ride.status}</span>
+                    </div>
+                    <div class="ride-details">
+                        <div><strong>From:</strong> ${ride.pickup.address}</div>
+                        <div><strong>To:</strong> ${ride.destination.address}</div>
+                        <div><strong>Distance:</strong> ${ride.distance.toFixed(1)} km</div>
+                        <div><strong>Price:</strong> D ${ride.price.toFixed(2)}</div>
+                    </div>
+                    <div class="ride-actions">
+                        <button class="btn-accept" onclick="acceptRide('${ride.id}')">Accept</button>
+                        <button class="btn-reject" onclick="rejectRide('${ride.id}')">Reject</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Render active ride
+        function renderActiveRide(ride) {
+            const container = document.getElementById('activeRide');
+
+            if (!ride) {
+                container.innerHTML = '<div class="empty-state">No active ride</div>';
+                return;
+            }
+
+            const pickupCoords = ride.pickup.coords;
+            const destCoords = ride.destination.coords;
+
+            container.innerHTML = `
+                <div class="ride-item">
+                    <div class="ride-header">
+                        <span class="ride-id">#${ride.id.slice(0, 8)}</span>
+                        <span class="status-badge status-${ride.status}">${ride.status}</span>
+                    </div>
+                    <div class="ride-details">
+                        <div><strong>From:</strong> ${ride.pickup.address}</div>
+                        <div><strong>To:</strong> ${ride.destination.address}</div>
+                        <div><strong>Distance:</strong> ${ride.distance.toFixed(1)} km</div>
+                        <div><strong>Price:</strong> D ${ride.price.toFixed(2)}</div>
+                    </div>
+                    <div class="ride-actions">
+                        ${ride.status === 'accepted' ? `
+                            <button class="btn-start" onclick="startRide('${ride.id}')">Start Trip</button>
+                        ` : ''}
+                        ${ride.status === 'in_progress' ? `
+                            <button class="btn-complete" onclick="completeRide('${ride.id}')">Complete Trip</button>
+                        ` : ''}
+                    </div>
+                    <div class="location-simulator">
+                        <h3>📍 Update Driver Location</h3>
+                        <div class="location-inputs">
+                            <div>
+                                <label>Latitude</label>
+                                <input type="number" id="driverLat" step="0.0001" value="${pickupCoords._lat || pickupCoords.latitude}" />
+                            </div>
+                            <div>
+                                <label>Longitude</label>
+                                <input type="number" id="driverLng" step="0.0001" value="${pickupCoords._long || pickupCoords.longitude}" />
+                            </div>
+                        </div>
+                        <button class="btn-update-location" onclick="updateDriverLocation('${ride.id}')">
+                            Update Location
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Send push notification
+        async function sendNotification(userId, title, body, data = {}) {
+            try {
+                // Get user's FCM token
+                const userDoc = await getDoc(doc(db, 'users', userId));
+                const fcmToken = userDoc.data()?.fcmToken;
+
+                if (!fcmToken) {
+                    console.log('No FCM token for user:', userId);
+                    return;
+                }
+
+                // Send via FCM REST API
+                const response = await fetch('https://fcm.googleapis.com/fcm/send', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `key=${FCM_SERVER_KEY}`,
+                    },
+                    body: JSON.stringify({
+                        to: fcmToken,
+                        notification: {
+                            title,
+                            body,
+                            sound: 'default',
+                        },
+                        data,
+                        priority: 'high',
+                    }),
+                });
+
+                const result = await response.json();
+                console.log('📱 Notification sent:', result);
+            } catch (error) {
+                console.error('📱 Error sending notification:', error);
+            }
+        }
+
+        // Actions
+        window.acceptRide = async (rideId) => {
+            try {
+                const rideRef = doc(db, 'rides', rideId);
+                const rideDoc = await getDoc(rideRef);
+                const rideData = rideDoc.data();
+
+                await updateDoc(rideRef, {
+                    status: 'accepted',
+                    'timestamps.accepted': serverTimestamp()
+                });
+
+                console.log('Ride accepted:', rideId);
+
+                // Send notification to user
+                await sendNotification(
+                    rideData.userId,
+                    '🚗 Driver Found!',
+                    'A driver accepted your ride and is on the way.',
+                    { type: 'ride_accepted', rideId }
+                );
+            } catch (error) {
+                console.error('Error accepting ride:', error);
+                alert('Error accepting ride');
+            }
+        };
+
+        window.rejectRide = async (rideId) => {
+            try {
+                const rideRef = doc(db, 'rides', rideId);
+                await updateDoc(rideRef, {
+                    status: 'cancelled',
+                    'timestamps.cancelled': serverTimestamp()
+                });
+                console.log('Ride rejected:', rideId);
+            } catch (error) {
+                console.error('Error rejecting ride:', error);
+                alert('Error rejecting ride');
+            }
+        };
+
+        window.startRide = async (rideId) => {
+            try {
+                const rideRef = doc(db, 'rides', rideId);
+                const rideDoc = await getDoc(rideRef);
+                const rideData = rideDoc.data();
+
+                await updateDoc(rideRef, {
+                    status: 'in_progress',
+                    'timestamps.started': serverTimestamp()
+                });
+
+                console.log('Ride started:', rideId);
+
+                // Send notification to user
+                await sendNotification(
+                    rideData.userId,
+                    '🚀 Trip Started',
+                    'Your trip has begun. Enjoy the ride!',
+                    { type: 'trip_started', rideId }
+                );
+            } catch (error) {
+                console.error('Error starting ride:', error);
+                alert('Error starting ride');
+            }
+        };
+
+        window.completeRide = async (rideId) => {
+            try {
+                const rideRef = doc(db, 'rides', rideId);
+                const rideDoc = await getDoc(rideRef);
+                const rideData = rideDoc.data();
+
+                await updateDoc(rideRef, {
+                    status: 'completed',
+                    'timestamps.completed': serverTimestamp()
+                });
+
+                console.log('Ride completed:', rideId);
+
+                // Send notification to user
+                await sendNotification(
+                    rideData.userId,
+                    '✅ Trip Completed',
+                    `Your trip is complete. Total: D ${rideData.price.toFixed(2)}`,
+                    { type: 'trip_completed', rideId }
+                );
+            } catch (error) {
+                console.error('Error completing ride:', error);
+                alert('Error completing ride');
+            }
+        };
+
+        window.updateDriverLocation = async (rideId) => {
+            try {
+                const lat = parseFloat(document.getElementById('driverLat').value);
+                const lng = parseFloat(document.getElementById('driverLng').value);
+
+                const rideRef = doc(db, 'rides', rideId);
+                await updateDoc(rideRef, {
+                    driverLocation: {
+                        latitude: lat,
+                        longitude: lng
+                    }
+                });
+                console.log('Driver location updated:', lat, lng);
+                alert('Location updated!');
+            } catch (error) {
+                console.error('Error updating location:', error);
+                alert('Error updating location');
+            }
+        };
+
+        // Initialize
+        listenToPendingRides();
+        listenToActiveRides();
+    </script>
+</body>
+</html>

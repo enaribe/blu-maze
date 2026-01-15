@@ -4,7 +4,9 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { Colors } from "../constants/Colors";
 import { usersCollection } from "../lib/firebase";
+import { initializeNotifications, onMessageReceived } from "../lib/notifications";
 import { useStore } from "../lib/store";
+import { Alert } from "react-native";
 
 export default function RootLayout() {
   const { setUser, logout } = useStore();
@@ -29,6 +31,13 @@ export default function RootLayout() {
               profilePhoto: userData?.profilePhoto,
               pin: userData?.pin,
             });
+
+            // Initialize notifications for this user (skip if not available natively)
+            try {
+              await initializeNotifications(firebaseUser.uid);
+            } catch (error) {
+              console.log('⚠️ [Notifications] Skipped (rebuild required):', error);
+            }
           } else {
             // User exists in Auth but not in Firestore yet (e.g. middle of signup)
             // We just ensure the common fields are set if possible
@@ -49,6 +58,24 @@ export default function RootLayout() {
     });
 
     return unsubscribe;
+  }, []);
+
+  // Listen for foreground notifications (skip if not available natively)
+  useEffect(() => {
+    try {
+      const unsubscribe = onMessageReceived((message) => {
+        // Show alert when notification received in foreground
+        Alert.alert(
+          message.notification?.title || 'New Notification',
+          message.notification?.body || '',
+        );
+      });
+
+      return unsubscribe;
+    } catch (error) {
+      console.log('⚠️ [Notifications] Listener skipped (rebuild required)');
+      return () => {}; // Return empty cleanup function
+    }
   }, []);
 
   return (

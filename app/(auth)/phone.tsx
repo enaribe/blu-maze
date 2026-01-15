@@ -11,10 +11,17 @@ import { useStore } from '../../lib/store';
  * User enters phone number to receive OTP
  */
 
+// Country codes for supported countries
+const COUNTRIES = [
+  { code: '+220', flag: '🇬🇲', name: 'Gambia' },
+  { code: '+221', flag: '🇸🇳', name: 'Senegal' },
+];
+
 export default function PhoneScreen() {
   const router = useRouter();
   const [phoneNumber, setPhoneNumber] = useState('');
   const [loading, setLoading] = useState(false);
+  const [selectedCountry, setSelectedCountry] = useState(COUNTRIES[1]); // Default to Senegal
 
   const { setConfirmation } = useStore();
 
@@ -23,14 +30,21 @@ export default function PhoneScreen() {
 
     setLoading(true);
     try {
-      // Format phone number (must include country code +220 for Gambia)
-      const formattedNumber = phoneNumber.startsWith('+')
-        ? phoneNumber
-        : `+220${phoneNumber.replace(/^0+/, '')}`;
+      // Format phone number with selected country code
+      let formattedNumber: string;
+      if (phoneNumber.startsWith('+')) {
+        // User already included country code
+        formattedNumber = phoneNumber;
+      } else {
+        // Use selected country code
+        const cleanedNumber = phoneNumber.replace(/^0+/, '');
+        formattedNumber = `${selectedCountry.code}${cleanedNumber}`;
+      }
 
       console.log('Sending OTP to:', formattedNumber);
 
       // Send verification code
+      // Note: Ensure Firebase project is on Blaze plan and SMS region is enabled
       const confirmation = await auth().signInWithPhoneNumber(formattedNumber);
 
       // Store confirmation for verify screen
@@ -49,6 +63,16 @@ export default function PhoneScreen() {
         message = 'Invalid phone number format.';
       } else if (error.code === 'auth/too-many-requests') {
         message = 'Too many requests. Please try again later.';
+      } else if (error.code === 'auth/operation-not-allowed') {
+        // Check if error message mentions region
+        const errorMsg = error.message || '';
+        if (errorMsg.includes('region') || errorMsg.includes('SMS')) {
+          const countryName = selectedCountry.name;
+          const countryCode = selectedCountry.code;
+          message = `SMS region not enabled for ${countryName} (${countryCode}). Steps to fix:\n\n1. Go to Firebase Console > Authentication > Settings\n2. Find "SMS Region Policy" section\n3. Click "Add region" or "Manage regions"\n4. Select "Allow" for ${countryName} (${countryCode}) or "Allow all regions" for testing\n5. Ensure your Firebase project is on Blaze plan (not Spark)\n6. Wait 2-5 minutes for changes to propagate\n7. Close and reopen the app`;
+        } else {
+          message = 'Phone authentication not enabled. Steps:\n\n1. Firebase Console > Authentication > Sign-in method > Phone > Enable\n2. Upgrade to Blaze plan (pay-as-you-go) - required for phone auth\n3. Configure SMS Region Policy in Settings\n4. Wait 2-5 minutes for changes to propagate\n5. Close and reopen the app';
+        }
       }
 
       Alert.alert('Error', message);
@@ -75,9 +99,17 @@ export default function PhoneScreen() {
         <Text style={styles.subtitle}>We'll send you a verification code</Text>
 
         <View style={styles.inputRow}>
-          {/* Flag Selector Placeholder */}
-          <TouchableOpacity style={styles.flagContainer}>
-            <Text style={styles.flagText}>🇬🇲</Text>
+          {/* Country Selector */}
+          <TouchableOpacity 
+            style={styles.flagContainer}
+            onPress={() => {
+              // Toggle between countries (simple implementation)
+              const currentIndex = COUNTRIES.findIndex(c => c.code === selectedCountry.code);
+              const nextIndex = (currentIndex + 1) % COUNTRIES.length;
+              setSelectedCountry(COUNTRIES[nextIndex]);
+            }}
+          >
+            <Text style={styles.flagText}>{selectedCountry.flag}</Text>
             <Text style={styles.chevron}>⌄</Text>
           </TouchableOpacity>
 
