@@ -9,9 +9,6 @@
       "distribution": "internal",
       "android": {
         "buildType": "apk"
-      },
-      "ios": {
-        "postPrebuildCommand": "node scripts/fix-ios-podfile.js"
       }
     },
     "preview": {

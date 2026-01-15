@@ -1,0 +1,100 @@
+// Import the Firebase iOS fix plugin
+const withFirebaseIOSFix = require('./plugins/fix-firebase-ios');
+
+const config = {
+  expo: {
+    name: "Blu Maze",
+    slug: "blu-maze-client",
+    version: "1.0.0",
+    orientation: "portrait",
+    icon: "./assets/images/icon.png",
+    scheme: "blumaze",
+    userInterfaceStyle: "dark",
+    newArchEnabled: true,
+    platforms: [
+      "ios",
+      "android"
+    ],
+    ios: {
+      bundleIdentifier: "com.blumaze.enatech",
+      supportsTablet: false,
+      googleServicesFile: "./GoogleService-Info.plist",
+      infoPlist: {
+        NSLocationWhenInUseUsageDescription: "Blu Maze needs your location to show nearby drivers and calculate trip routes.",
+        NSLocationAlwaysAndWhenInUseUsageDescription: "Blu Maze needs your location to show nearby drivers and track your trip.",
+        ITSAppUsesNonExemptEncryption: false
+      },
+      config: {
+        googleMapsApiKey: "AIzaSyAFGHTBWWghUIVOKXeVd0Yvh0jeP08FgRo"
+      }
+    },
+    android: {
+      package: "com.blumaze.enatech",
+      googleServicesFile: "./google-services.json",
+      adaptiveIcon: {
+        backgroundColor: "#000000",
+        foregroundImage: "./assets/images/android-icon-foreground.png",
+        backgroundImage: "./assets/images/android-icon-background.png",
+        monochromeImage: "./assets/images/android-icon-monochrome.png"
+      },
+      edgeToEdgeEnabled: true,
+      predictiveBackGestureEnabled: false,
+      permissions: [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ],
+      config: {
+        googleMaps: {
+          apiKey: "AIzaSyAFGHTBWWghUIVOKXeVd0Yvh0jeP08FgRo"
+        }
+      }
+    },
+    web: {
+      output: "static",
+      favicon: "./assets/images/favicon.png"
+    },
+    plugins: [
+      "expo-router",
+      [
+        "expo-location",
+        {
+          locationAlwaysAndWhenInUsePermission: "Allow Blu Maze to use your location to show nearby drivers and calculate trip routes."
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          image: "./assets/images/splash-icon.png",
+          imageWidth: 200,
+          resizeMode: "contain",
+          backgroundColor: "#000000",
+          dark: {
+            backgroundColor: "#000000"
+          }
+        }
+      ],
+      "@react-native-firebase/app",
+      "@react-native-firebase/auth",
+      "expo-secure-store",
+      "@react-native-firebase/messaging"
+    ],
+    experiments: {
+      typedRoutes: true,
+      reactCompiler: true
+    },
+    extra: {
+      router: {},
+      eas: {
+        projectId: "d82ba390-d33b-471a-b038-0d48b582d4e5"
+      }
+    },
+    hooks: {
+      postPublish: []
+    }
+  }
+};
+
+// Apply the Firebase iOS fix plugin programmatically
+module.exports = withFirebaseIOSFix(config);
