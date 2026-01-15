@@ -18,10 +18,11 @@
       "googleServicesFile": "./GoogleService-Info.plist",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Blu Maze needs your location to show nearby drivers and calculate trip routes.",
-        "NSLocationAlwaysAndWhenInUseUsageDescription": "Blu Maze needs your location to show nearby drivers and track your trip."
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Blu Maze needs your location to show nearby drivers and track your trip.",
+        "ITSAppUsesNonExemptEncryption": false
       },
       "config": {
-        "googleMapsApiKey": "AIzaSyDh-1JWqpK2QuqAz5a9yDL-MHmNEDp6kgQ"
+        "googleMapsApiKey": "AIzaSyAFGHTBWWghUIVOKXeVd0Yvh0jeP08FgRo"
       }
     },
     "android": {
@@ -43,7 +44,7 @@
       ],
       "config": {
         "googleMaps": {
-          "apiKey": "AIzaSyDh-1JWqpK2QuqAz5a9yDL-MHmNEDp6kgQ"
+          "apiKey": "AIzaSyAFGHTBWWghUIVOKXeVd0Yvh0jeP08FgRo"
         }
       }
     },
@@ -73,7 +74,9 @@
       ],
       "@react-native-firebase/app",
       "@react-native-firebase/auth",
-      "expo-secure-store"
+      "expo-secure-store",
+      "@react-native-firebase/messaging",
+      "./plugins/fix-firebase-ios.js"
     ],
     "experiments": {
       "typedRoutes": true,
